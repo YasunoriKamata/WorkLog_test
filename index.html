@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>出勤簿登録サイト</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
+</head>
+<body>
+  <div class="container">
+    <!-- ヘッダー部 -->
+    <header>
+      <h1>出勤簿登録</h1>
+      <form id="headerForm">
+        <label for="workerName">記入者:</label>
+        <input type="text" class="autocomplete-input" placeholder="記入者名" required>
+
+        <label for="supervisor">監視長:</label>
+        <input type="text" class="autocomplete-input" placeholder="監視長名" required>
+
+        <div class="radio-group">
+          <label><input type="radio" name="type" value="normal" checked> 通常監視</label>
+          <label><input type="radio" name="type" value="other"> その他</label>
+          <input type="text" id="otherInput" name="otherInput" placeholder="内容" disabled>
+        </div>
+      </form>
+    </header>
+
+    <!-- テーブル部分 -->
+    <section id="attendanceTable">
+      <h2>出勤登録</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>名前</th>
+            <th>勤務形態</th>
+            <th>出勤時刻</th>
+            <th>退勤時刻</th>
+            <th>バッチテスト</th>
+            <th>備考</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tbody id="attendanceTableBody">
+            <!-- ここに行が動的に追加される -->
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ボタン部 -->
+    <footer>
+      <button type="button" id="reloadButton">マスタ再読込</button>
+      <button type="button" id="registerBtn">登録実行</button>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
