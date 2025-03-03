@@ -4,24 +4,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>出勤簿登録サイト</title>
+  <title>出勤簿登録サイト(一色)</title>
   <link rel="stylesheet" href="styles.css">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>   
   <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var today = new Date().toISOString().split('T')[0];
+      document.getElementById('date').value = today;
+    });
+  </script>
 </head>
+
 <body>
   <div class="container">
     <!-- ヘッダー部 -->
     <header>
-      <h1>出勤簿登録</h1>
+      <h1>出勤簿登録サイト(一色)</h1>
       <form id="headerForm">
-        <label for="workerName">記入者:</label>
-        <input type="text" class="autocomplete-input" placeholder="記入者名" required>
-
-        <label for="supervisor">監視長:</label>
-        <input type="text" class="autocomplete-input" placeholder="監視長名" required>
-
+        <div class="form-group">
+          <label for="recorder">記入者:</label>
+          <input type="text" id="recorder" class="autocomplete-input" name="recorder" placeholder="記入者名" required>
+        </div>
+        <div class="form-group">
+          <label for="supervisor">監視長:</label>
+          <input type="text" id="supervisor" name="supervisor" class="autocomplete-input" placeholder="監視長名" required>
+        </div>
+        <div class="form-group">
+          <label for="date">日付:</label>
+          <input type="date" id="date" name="date" required>
+        </div>
         <div class="radio-group">
           <label><input type="radio" name="type" value="normal" checked> 通常監視</label>
           <label><input type="radio" name="type" value="other"> その他</label>
@@ -32,7 +45,6 @@
 
     <!-- テーブル部分 -->
     <section id="attendanceTable">
-      <h2>出勤登録</h2>
       <table>
         <thead>
           <tr>
@@ -45,8 +57,8 @@
           </tr>
         </thead>
         <tbody>
-          <tbody id="attendanceTableBody">
-            <!-- ここに行が動的に追加される -->
+        <tbody id="attendanceTableBody">
+          <!-- ここに行が動的に追加される -->
         </tbody>
       </table>
     </section>
@@ -60,4 +72,5 @@
 
   <script src="script.js"></script>
 </body>
+
 </html>

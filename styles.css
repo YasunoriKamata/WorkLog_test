@@ -1,35 +1,203 @@
-/* 全体の設定 */
+
+/* 全体のスタイル */
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Arial', sans-serif;
+  background-color: #f8f9fa;
+  color: #333;
   margin: 0;
-  padding: 0;
-  background-color: #f4f4f9;
-}
-
-.container {
-  width: 80%;
-  margin: 0 auto;
-}
-
-/* ヘッダー部 */
-h1 {
   padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* コンテナ */
+.container {
+  background: white;
+  width: 100%;
+  max-width: 900px;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+/* ヘッダー部分のデザイン */
+#headerForm {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-width: 600px;
+  margin: 0 auto;
+  margin-bottom: 20px;
+}
+
+/* タイトル */
+h1 {
+  background: #3a5a97;
+  text-align: center;
+  font-size: 28px;
+  color: white;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+/* 共通の入力フィールドレイアウト */
+.form-group, .radio-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+/* ラベルのスタイル */
+.form-group label {
+  width: 25%;
+  font-weight: bold;
+  color: #555;
+  text-align: right;
+}
+
+/* 入力フィールドのスタイル */
+.form-group input {
+  flex-grow: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+  background-color: #f8f9fa;
+}
+
+/* ラジオボタン部分 */
+.radio-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  width: 100%;
+}
+
+/* ラジオボタンのラベルを統一 */
+.radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: normal;
+}
+
+/* ラジオボタンのスタイル */
+.radio-group input[type="radio"] {
+  accent-color: #3a5a97;
+  transform: scale(1.1); /* 少し大きくして視認性UP */
+}
+
+/* 「その他」入力欄をラジオボタンと統一 */
+#otherInput {
+  flex-grow: 1;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+  background-color: #f8f9fa;
+}
+
+/* フォーカス時のハイライト */
+input:focus {
+  outline: none;
+  border-color: #3a5a97;
+  box-shadow: 0px 0px 5px rgba(58, 90, 151, 0.5);
+}
+
+/* テーブル */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* ヘッダー部分 */
+th {
+  background: #3a5a97;
+  color: white;
+  padding: 12px;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* 各列の幅調整 */
+th:nth-child(1), td:nth-child(1) { width: 20%; } /* 名前 */
+th:nth-child(2), td:nth-child(2) { width: 20%; } /* 勤務形態 */
+th:nth-child(3), td:nth-child(3) { width: 14%; } /* 出勤時刻 */
+th:nth-child(4), td:nth-child(4) { width: 14%; } /* 退勤時刻 */
+th:nth-child(5), td:nth-child(5) { width: 12%; } /* バッチテスト */
+th:nth-child(6), td:nth-child(6) { width: 20%; } /* 備考 */
+
+/* セルのデザイン */
+td {
+  border: 1px solid #ddd;
+  padding: 8px;
   text-align: center;
 }
 
-header h1 {
-  margin: 0;
-  background-color: #28a745;
+/* 奇数行の背景色 */
+tbody tr:nth-child(odd) {
+  background: #f1f3f5;
+}
+
+/* 入力欄のデザイン */
+input[type="text"],
+input[type="time"] {
+  width: 90%;
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  text-align: left;
+}
+
+/* ラジオボタンのデザイン */
+td label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  justify-content: center;
+}
+
+/* チェックボックス */
+input[type="checkbox"] {
+  transform: scale(1.2);
+}
+
+/* ボタン */
+footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+button {
+  padding: 10px 15px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#reloadButton {
+  background: #28a745;
   color: white;
 }
 
-button,[type="checkbox"]{
-  cursor : pointer;
+#registerBtn {
+  background: #3a5a97;
+  color: white;
 }
-.ui-autocomplete {
-  z-index: 1;  /* 最低でもこれは絶対 */
-  height: 10em;        /* 候補リストがそれなりなら必須。すぐに画面が溢れちゃう。*/
-  overflow-y: scroll;  /* 同上。*/
 
-  font-size: small;  /* これはあなたのスタイルに合わせてな */
+button:hover {
+  opacity: 0.8;
 }
