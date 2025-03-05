@@ -73,10 +73,12 @@ $(document).ready(function () {
       });
   });
 
+
+
   // 登録処理
-  document.getElementById('registerBtn').addEventListener('click', async function () {
+  $('#registerBtn').on('click', async function () {
     try {
-      document.body.style.cursor = 'wait';
+      $('body').css('cursor', 'wait');
 
       //未入力項目がある場合は抜ける
       if (!$('form')[0].reportValidity()) {
@@ -86,27 +88,31 @@ $(document).ready(function () {
       // ヘッダー情報の取得と送信
       const headerData = {
         type: 'header',  // データタイプを指定
-        recorder: document.getElementById('recorder').value,
-        supervisor: document.getElementById('supervisor').value,
-        date: document.getElementById('date').value,
-        workType: document.querySelector('input[name="type"]:checked').value,
-        otherInput: document.querySelector('input[name="type"]:checked').value === '2'
-          ? document.getElementById('otherInput').value
+        date: $('#date').val(),
+        recorder: $('#recorder').val(),
+        supervisor: $('#supervisor').val(),
+        workType: $('input[name="type"]:checked').val(),
+        otherInput: $('input[name="type"]:checked').val() === '2'
+          ? $('#otherInput').val()
           : '' // 通常監視の場合は空文字を設定
       };
+
       // 明細情報の取得
       const details = [];
-      const rows = document.querySelectorAll('#attendanceTableBody tr');
-      rows.forEach(row => {
-        const name = row.querySelector('input[name="name"]').value;
+      $('#attendanceTableBody tr').each(function () {
+        const name = $(this).find('input[name="name"]').val();
         if (name) {  // 名前が入力されている行のみ処理
           details.push({
             name: name,
-            shiftType: row.querySelector('input[name^="shiftType"]:checked').value,
-            startTime: row.querySelector('input[name^="shiftType"]:checked').value === '2' ? row.querySelector('input[name^="startTime"]').value : '',
-            endTime: row.querySelector('input[name^="shiftType"]:checked').value === '2' ? row.querySelector('input[name^="endTime"]').value : '',
-            batchTest: row.querySelector('input[name="batchTest"]').checked,
-            remarks: row.querySelector('input[name="remarks"]').value
+            shiftType: $(this).find('input[name^="shiftType"]:checked').val(),
+            startTime: $(this).find('input[name^="shiftType"]:checked').val() === '2'
+              ? $(this).find('input[name^="startTime"]').val()
+              : '',
+            endTime: $(this).find('input[name^="shiftType"]:checked').val() === '2'
+              ? $(this).find('input[name^="endTime"]').val()
+              : '',
+            batchTest: $(this).find('input[name="batchTest"]').prop('checked'),
+            remarks: $(this).find('input[name="remarks"]').val()
           });
         }
       });
@@ -138,14 +144,13 @@ $(document).ready(function () {
         },
         body: JSON.stringify(detailData)
       });
-
       alert('データが正常に保存されました');
 
     } catch (error) {
       console.error('エラーが発生しました:', error);
       alert('データの保存に失敗しました');
     } finally {
-      document.body.style.cursor = 'default';
+      $('body').css('cursor', 'default');
     }
   });
 });
