@@ -4,8 +4,8 @@ $(document).ready(function () {
 <tr>
     <td><input type="text" class="autocomplete-input" name="name" placeholder="名前" required></td>
     <td>
-        <label><input type="radio" name="shiftType{index}" class="shiftType" value="dayShift" checked> 日勤</label>
-        <label><input type="radio" name="shiftType{index}" class="shiftType" value="timeShift"> 時間勤務</label>
+        <label><input type="radio" name="shiftType{index}" class="shiftType" value="1" checked> 日勤</label>
+        <label><input type="radio" name="shiftType{index}" class="shiftType" value="2"> 時間勤務</label>
     </td>
     <td><input type="time" name="startTime{index}" value="08:00" disabled></td>
     <td><input type="time" name="endTime{index}" value="17:00" disabled></td>
@@ -26,7 +26,7 @@ $(document).ready(function () {
     const index = $(this).attr('name').replace('shiftType', '');
 
     // "時間勤務" が選ばれた場合
-    if ($(this).val() === "timeShift") {
+    if ($(this).val() === "2") {
       $(`input[name='startTime${index}']`).prop("disabled", false); // 出勤時間を活性化
       $(`input[name='endTime${index}']`).prop("disabled", false);   // 退勤時間を活性化
     } else {
@@ -37,7 +37,7 @@ $(document).ready(function () {
 
   // "その他" を選んだときのみ、入力フィールドを活性化
   $("input[name='type']").change(function() {
-    if ($("input[name='type']:checked").val() === "other") {
+    if ($("input[name='type']:checked").val() === "2") {
       $("#otherInput").prop("disabled", false);  // "その他" を選択したら入力フィールドを活性化
     } else {
       $("#otherInput").prop("disabled", true);   // "その他" 以外が選ばれたら入力フィールドを非活性
@@ -49,7 +49,6 @@ $(document).ready(function () {
   $(".autocomplete-input").autocomplete({
     source: function (request, response) {
       $.getJSON(url, { query: request.term }, function (data) {
-        console.log("処理に入った");
         if (data.length === 0) {
           // 結果がない場合、「no data」を表示
           response(["No data"]);
@@ -72,5 +71,79 @@ $(document).ready(function () {
         // 再取得したデータをもとに処理を実行することもできます
         // 必要に応じて `data` を使って処理を行う
       });
+  });
+
+
+
+
+  // 登録処理
+  document.getElementById('registerBtn').addEventListener('click', async function() {
+    try {
+      document.body.style.cursor = 'wait';
+      
+    // ヘッダー情報の取得と送信
+    const headerData = {
+       type: 'header',  // データタイプを指定
+       recorder: document.getElementById('recorder').value,
+       supervisor: document.getElementById('supervisor').value,
+       date: document.getElementById('date').value,
+       workType: document.querySelector('input[name="type"]:checked').value,
+       otherInput: document.querySelector('input[name="type"]:checked').value === '2' 
+         ? document.getElementById('otherInput').value 
+         : '' // 通常監視の場合は空文字を設定
+  };
+      // 明細情報の取得
+      const details = [];
+      const rows = document.querySelectorAll('#attendanceTableBody tr');
+      rows.forEach(row => {
+        const name = row.querySelector('input[name="name"]').value;
+        if (name) {  // 名前が入力されている行のみ処理
+          details.push({
+            name: name,
+            shiftType: row.querySelector('input[name^="shiftType"]:checked').value,
+            startTime: row.querySelector('input[name^="shiftType"]:checked').value === '2' ? row.querySelector('input[name^="startTime"]').value : '',
+            endTime: row.querySelector('input[name^="shiftType"]:checked').value === '2' ? row.querySelector('input[name^="endTime"]').value: '',
+            batchTest: row.querySelector('input[name="batchTest"]').checked,
+            remarks: row.querySelector('input[name="remarks"]').value
+          });
+        }
+      });
+  
+      const detailData = {
+        type: 'detail',  // データタイプを指定
+        date: headerData.date,
+        details: details
+      };
+  
+      const GAS_URL = "https://script.google.com/macros/s/AKfycbyu0mCvUeOs_wMg0PZExPkK1_MnEhT4f8vdGsmoZjBo1YMg5pIovVHHYvXpg1XdCClz/exec";
+  
+      // ヘッダーデータの送信
+      await fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(headerData)
+      });
+  
+      // 明細データの送信
+      await fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(detailData)
+      });
+  
+      alert('データが正常に保存されました');
+  
+    } catch (error) {
+      console.error('エラーが発生しました:', error);
+      alert('データの保存に失敗しました');
+    } finally {
+      document.body.style.cursor = 'default';
+    }
   });
 });
