@@ -2,7 +2,7 @@ $(document).ready(function () {
   // 1行分のテンプレートを用意
   const rowTemplate = `
 <tr>
-    <td><input type="text" class="autocomplete-input" name="name" placeholder="名前" required></td>
+    <td><input type="text" class="autocomplete-input" name="name" placeholder="名前"></td>
     <td>
         <label><input type="radio" name="shiftType{index}" class="shiftType" value="1" checked> 日勤</label>
         <label><input type="radio" name="shiftType{index}" class="shiftType" value="2"> 時間勤務</label>
@@ -15,13 +15,13 @@ $(document).ready(function () {
 `;
   // 15行を動的に追加
   for (let i = 0; i < 15; i++) {
-      // {index} を i に置き換えて動的に名前を変更
-      const rowWithIndex = rowTemplate.replace(/{index}/g, i+1);
-      $("#attendanceTableBody").append(rowWithIndex);
+    // {index} を i に置き換えて動的に名前を変更
+    const rowWithIndex = rowTemplate.replace(/{index}/g, i + 1);
+    $("#attendanceTableBody").append(rowWithIndex);
   }
 
   // ラジオボタンの変更を監視
-  $(document).on("change", ".shiftType", function() {
+  $(document).on("change", ".shiftType", function () {
     // 現在選択された行のインデックスを取得
     const index = $(this).attr('name').replace('shiftType', '');
 
@@ -36,7 +36,7 @@ $(document).ready(function () {
   });
 
   // "その他" を選んだときのみ、入力フィールドを活性化
-  $("input[name='type']").change(function() {
+  $("input[name='type']").change(function () {
     if ($("input[name='type']:checked").val() === "2") {
       $("#otherInput").prop("disabled", false);  // "その他" を選択したら入力フィールドを活性化
     } else {
@@ -73,25 +73,27 @@ $(document).ready(function () {
       });
   });
 
-
-
-
   // 登録処理
-  document.getElementById('registerBtn').addEventListener('click', async function() {
+  document.getElementById('registerBtn').addEventListener('click', async function () {
     try {
       document.body.style.cursor = 'wait';
-      
-    // ヘッダー情報の取得と送信
-    const headerData = {
-       type: 'header',  // データタイプを指定
-       recorder: document.getElementById('recorder').value,
-       supervisor: document.getElementById('supervisor').value,
-       date: document.getElementById('date').value,
-       workType: document.querySelector('input[name="type"]:checked').value,
-       otherInput: document.querySelector('input[name="type"]:checked').value === '2' 
-         ? document.getElementById('otherInput').value 
-         : '' // 通常監視の場合は空文字を設定
-  };
+
+      //未入力項目がある場合は抜ける
+      if (!$('form')[0].reportValidity()) {
+        return false;
+      }
+
+      // ヘッダー情報の取得と送信
+      const headerData = {
+        type: 'header',  // データタイプを指定
+        recorder: document.getElementById('recorder').value,
+        supervisor: document.getElementById('supervisor').value,
+        date: document.getElementById('date').value,
+        workType: document.querySelector('input[name="type"]:checked').value,
+        otherInput: document.querySelector('input[name="type"]:checked').value === '2'
+          ? document.getElementById('otherInput').value
+          : '' // 通常監視の場合は空文字を設定
+      };
       // 明細情報の取得
       const details = [];
       const rows = document.querySelectorAll('#attendanceTableBody tr');
@@ -102,21 +104,21 @@ $(document).ready(function () {
             name: name,
             shiftType: row.querySelector('input[name^="shiftType"]:checked').value,
             startTime: row.querySelector('input[name^="shiftType"]:checked').value === '2' ? row.querySelector('input[name^="startTime"]').value : '',
-            endTime: row.querySelector('input[name^="shiftType"]:checked').value === '2' ? row.querySelector('input[name^="endTime"]').value: '',
+            endTime: row.querySelector('input[name^="shiftType"]:checked').value === '2' ? row.querySelector('input[name^="endTime"]').value : '',
             batchTest: row.querySelector('input[name="batchTest"]').checked,
             remarks: row.querySelector('input[name="remarks"]').value
           });
         }
       });
-  
+
       const detailData = {
         type: 'detail',  // データタイプを指定
         date: headerData.date,
         details: details
       };
-  
+
       const GAS_URL = "https://script.google.com/macros/s/AKfycbyu0mCvUeOs_wMg0PZExPkK1_MnEhT4f8vdGsmoZjBo1YMg5pIovVHHYvXpg1XdCClz/exec";
-  
+
       // ヘッダーデータの送信
       await fetch(GAS_URL, {
         method: 'POST',
@@ -126,7 +128,7 @@ $(document).ready(function () {
         },
         body: JSON.stringify(headerData)
       });
-  
+
       // 明細データの送信
       await fetch(GAS_URL, {
         method: 'POST',
@@ -136,9 +138,9 @@ $(document).ready(function () {
         },
         body: JSON.stringify(detailData)
       });
-  
+
       alert('データが正常に保存されました');
-  
+
     } catch (error) {
       console.error('エラーが発生しました:', error);
       alert('データの保存に失敗しました');
