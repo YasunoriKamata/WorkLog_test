@@ -4,41 +4,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>出勤簿登録サイト(一色)</title>
+  <meta name="description" content="一色海岸の出勤簿登録システム">
+  <meta name="author" content="Yasinori Kamata">
+  <title>出勤簿登録サイト(一色海岸)</title>
+
+  <!-- スタイルシート -->
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
+
+  <!-- スクリプト -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
+  <script src="script.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       var today = new Date().toISOString().split('T')[0];
       document.getElementById('date').value = today;
     });
   </script>
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
 </head>
 
 <body>
   <form class="container">
     <!-- ヘッダー部 -->
     <header>
+      <!-- picture -->
+      <img src="http://www.lifesaving.or.jp/wp/wp-content/uploads/2022/05/rogoheadb.gif" width="60%">
       <h1>出勤簿登録サイト(一色)</h1>
       <div id="headerForm">
         <div class="form-group">
-          <label for="date">日付:</label>
+          <label for="date">日付*</label>
           <input type="date" id="date" name="date" required>
         </div>
         <div class="form-group">
-          <label for="recorder">記入者:</label>
+          <label for="recorder">記入者*</label>
           <input type="text" id="recorder" class="autocomplete-input" name="recorder" placeholder="記入者名" required>
         </div>
         <div class="form-group">
-          <label for="supervisor">監視長:</label>
+          <label for="supervisor">監視長*</label>
           <input type="text" id="supervisor" name="supervisor" class="autocomplete-input" placeholder="監視長名" required>
         </div>
         <div class="radio-group">
           <label><input type="radio" name="type" value="1" checked> 通常監視</label>
           <label><input type="radio" name="type" value="2"> その他</label>
-          <input type="text" id="otherInput" name="otherInput" placeholder="内容" disabled>
+          <select id="nameEvent" name="nameEvent" disabled>
+            <option value="">選択してください</option>
+            <option value="A">イベントA</option>
+            <option value="B">イベントB</option>
+            <option value="C">イベントC</option>
+          </select>
         </div>
       </div>
     </header>
@@ -69,8 +85,7 @@
       <button type="button" id="registerBtn">登録実行</button>
     </footer>
   </form>
-
-  <script src="script.js"></script>
+  <div id="overlay" style="display: none;"></div>
 </body>
 
 </html>
