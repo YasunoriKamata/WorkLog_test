@@ -1,6 +1,6 @@
 {
-  "name": "出勤簿登録サイト(一色海岸)",
-  "short_name": "出勤簿登録(一色)",
+  "name": "出勤簿登録サイト",
+  "short_name": "出勤簿登録",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#ffffff",

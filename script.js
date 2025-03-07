@@ -27,8 +27,6 @@ $(document).ready(function () {
   // 今日の日付を設定
   document.getElementById('date').value = new Date().toISOString().split('T')[0];
 
-
-
   // フィールド処理
   // 勤務区分の変更監視
   $(document).on("change", ".shiftType", function () {
@@ -54,8 +52,7 @@ $(document).ready(function () {
       $.getJSON(AUTOCOMPLETE_URL, { query: request.term }, function (data) {
         response(data.length === 0 ? ["No data"] : data);
       });
-    },
-    minLength: 1,
+    }
   });
 
 
@@ -65,7 +62,6 @@ $(document).ready(function () {
     console.log("キャッシュを再取得します...");
     $.getJSON(AUTOCOMPLETE_URL, { query: "", reload: "true" }, function (data) {
       console.log("キャッシュが再取得されました");
-      alert('キャッシュが再取得されました');
     });
   });
 
@@ -73,11 +69,6 @@ $(document).ready(function () {
   $('#registerBtn').on('click', async function () {
     try {
       if (!$('form')[0].reportValidity()) {
-        $('html, body').animate({ scrollTop: 0 }, 'normal');
-        return false;
-      }
-
-      if ($('input[name="type"]:checked').val() === '2' && $('#nameEvent').val() === '') {
         $('html, body').animate({ scrollTop: 0 }, 'normal');
         return false;
       }
@@ -134,14 +125,45 @@ $(document).ready(function () {
       });
 
       $('html, body').animate({ scrollTop: 0 }, 'normal');
-      alert('データが正常に保存されました');
+      alert('正常に登録されました。お疲れ様です！');
 
     } catch (error) {
       console.error('エラーが発生しました:', error);
-      alert('データの保存に失敗しました');
+      alert('登録に失敗しました');
     } finally {
       $('body').css('cursor', 'default');
       $('#overlay').hide();
     }
+  });
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+  // モーダルを表示
+  const modal = document.getElementById('siteSelector');
+  modal.style.display = 'block';
+
+  // サイト選択ボタンのイベントリスナー
+  const siteButtons = document.querySelectorAll('.site-buttons button');
+  siteButtons.forEach(button => {
+    button.addEventListener('click', function () {
+      const site = this.getAttribute('data-site');
+      const title = document.querySelector('h1');
+
+      // サイトに応じてタイトルを変更
+      switch (site) {
+        case 'A':
+          title.textContent = '出勤簿登録サイト(森戸海岸)';
+          break;
+        case 'B':
+          title.textContent = '出勤簿登録サイト(一色海岸)';
+          break;
+        case 'C':
+          title.textContent = '出勤簿登録サイト(長者ヶ崎海岸)';
+          break;
+      }
+
+      // モーダルを非表示
+      modal.style.display = 'none';
+    });
   });
 });
