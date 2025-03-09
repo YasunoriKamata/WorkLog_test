@@ -40,8 +40,8 @@ $(document).ready(function () {
   });
 
   // 監視区分の変更監視
-  $("input[name='type']").change(function () {
-    const isOther = $("input[name='type']:checked").val() === "2";
+  $("input[name='workType']").change(function () {
+    const isOther = $("input[name='workType']:checked").val() === "2";
     $("#nameEvent").prop("disabled", !isOther);
     $("#nameEvent").prop("required", isOther);
   });
@@ -79,10 +79,11 @@ $(document).ready(function () {
       const headerData = {
         type: 'header',
         date: $('#date').val(),
+        location: $('input[name="location"]:checked').val(),
         recorder: $('#recorder').val(),
         supervisor: $('#supervisor').val(),
-        workType: $('input[name="type"]:checked').val(),
-        otherInput: $('input[name="type"]:checked').val() === '2' ? $('#nameEvent').val() : ''
+        workType: $('input[name="workType"]:checked').val(),
+        nameEvent: $('input[name="workType"]:checked').val() === '2' ? $('#nameEvent').val() : ''
       };
 
       const details = [];
@@ -107,6 +108,7 @@ $(document).ready(function () {
       const detailData = {
         type: 'detail',
         date: headerData.date,
+        location: headerData.location,
         details: details
       };
 
@@ -146,18 +148,20 @@ document.addEventListener('DOMContentLoaded', function () {
   const siteButtons = document.querySelectorAll('.site-buttons button');
   siteButtons.forEach(button => {
     button.addEventListener('click', function () {
-      const site = this.getAttribute('data-site');
+      const location = this.getAttribute('location');
       const title = document.querySelector('h1');
 
-      // サイトに応じてタイトルを変更
-      switch (site) {
-        case 'A':
+      // 場所に応じてラジオボタンのチェックを変更
+      $(`input[name="location"][value="${location}"]`).prop('checked', true);
+      // 場所に応じてタイトルを変更
+      switch (location) {
+        case '1':
           title.textContent = '出勤簿登録サイト(森戸海岸)';
           break;
-        case 'B':
+        case '2':
           title.textContent = '出勤簿登録サイト(一色海岸)';
           break;
-        case 'C':
+        case '3':
           title.textContent = '出勤簿登録サイト(長者ヶ崎海岸)';
           break;
       }

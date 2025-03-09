@@ -26,8 +26,23 @@
       <!-- picture -->
       <img src="img/rogoheadb.jpg" width="60%">
       <!-- <img src="http://www.lifesaving.or.jp/wp/wp-content/uploads/2022/05/rogoheadb.gif" width="60%"> -->
-      <h1>出勤簿登録サイト()</h1>
+      <h1>出勤簿登録サイト</h1>
       <div id="headerForm">
+        <div class="radio-group">
+          <label><input type="radio" name="location" value="1" disabled> 森戸海岸</label>
+          <label><input type="radio" name="location" value="2" disabled> 一色海岸</label>
+          <label><input type="radio" name="location" value="3" disabled> 長者ヶ崎海岸</label>
+        </div>
+        <div class="radio-group">
+          <label><input type="radio" name="workType" value="1" checked> 通常監視</label>
+          <label><input type="radio" name="workType" value="2"> その他</label>
+          <select id="nameEvent" name="nameEvent" disabled>
+            <option value="">選択してください</option>
+            <option value="A">イベントA</option>
+            <option value="B">イベントB</option>
+            <option value="C">イベントC</option>
+          </select>
+        </div>
         <div class="form-group">
           <label for="date">日付*</label>
           <input type="date" id="date" name="date" required>
@@ -40,16 +55,7 @@
           <label for="supervisor">監視長*</label>
           <input type="text" id="supervisor" name="supervisor" class="autocomplete-input" placeholder="監視長名" required>
         </div>
-        <div class="radio-group">
-          <label><input type="radio" name="type" value="1" checked> 通常監視</label>
-          <label><input type="radio" name="type" value="2"> その他</label>
-          <select id="nameEvent" name="nameEvent" disabled>
-            <option value="">選択してください</option>
-            <option value="A">イベントA</option>
-            <option value="B">イベントB</option>
-            <option value="C">イベントC</option>
-          </select>
-        </div>
+
       </div>
     </header>
 
@@ -85,9 +91,9 @@
     <div class="modal-content">
       <h2>監視所を選択してください</h2>
       <div class="site-buttons">
-        <button type="button" data-site="A">森戸海岸<br>監視所</button>
-        <button type="button" data-site="B">一色海岸<br>監視所</button>
-        <button type="button" data-site="C">長者ヶ崎海岸<br>監視所</button>
+        <button type="button" location="1">森戸海岸<br>監視所</button>
+        <button type="button" location="2">一色海岸<br>監視所</button>
+        <button type="button" location="3">長者ヶ崎海岸<br>監視所</button>
       </div>
     </div>
   </div>

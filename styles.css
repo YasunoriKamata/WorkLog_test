@@ -48,12 +48,34 @@ h1 {
 /* ===== フォーム要素 ===== */
 #headerForm {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 25px;
   margin-bottom: 30px;
 }
 
+/* ラジオグループ */
+.radio-group {
+  grid-column: span 3;
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.radio-group label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #2c3e50;
+  cursor: pointer;
+}
+
 .form-group {
+  grid-column: span 2;
   margin-bottom: 0;
 }
 
@@ -80,27 +102,6 @@ h1 {
   background-color: #fff;
   border-color: #3498db;
   box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-}
-
-/* ラジオグループ */
-.radio-group {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  gap: 30px;
-  padding: 15px;
-  background-color: #f8f9fa;
-  border-radius: 6px;
-  border: 1px solid #e0e0e0;
-}
-
-.radio-group label {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  color: #2c3e50;
-  cursor: pointer;
 }
 
 /* イベント名入力フィールド */
@@ -216,9 +217,6 @@ select:disabled {
   cursor: not-allowed;
 }
 
-
-
-
 .modal {
   display: none;
   position: fixed;
@@ -252,22 +250,15 @@ select:disabled {
   padding: 10px 20px;
   font-size: 16px;
   cursor: pointer;
-  background-color: #4CAF50;
+  background-color: #3498db;
   color: white;
   border: none;
   border-radius: 4px;
 }
 
 .site-buttons button:hover {
-  background-color: #45a049;
+  background-color: #2980b9;
 }
-
-
-
-
-
-
-
 
 /* ===== メディアクエリ ===== */
 @media screen and (max-width: 1024px) {
