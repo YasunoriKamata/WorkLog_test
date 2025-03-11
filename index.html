@@ -29,19 +29,10 @@
       <h1>出勤簿登録サイト</h1>
       <div id="headerForm">
         <div class="radio-group">
-          <label><input type="radio" name="location" value="1" disabled> 森戸海岸</label>
-          <label><input type="radio" name="location" value="2" disabled> 一色海岸</label>
-          <label><input type="radio" name="location" value="3" disabled> 長者ヶ崎海岸</label>
-        </div>
-        <div class="radio-group">
-          <label><input type="radio" name="workType" value="1" checked> 通常監視</label>
-          <label><input type="radio" name="workType" value="2"> その他</label>
-          <select id="nameEvent" name="nameEvent" disabled>
-            <option value="">選択してください</option>
-            <option value="A">イベントA</option>
-            <option value="B">イベントB</option>
-            <option value="C">イベントC</option>
-          </select>
+          <label><input type="radio" name="location" value="1" disabled> 森戸海岸監視所</label>
+          <label><input type="radio" name="location" value="2" disabled> 一色海岸監視所</label>
+          <label><input type="radio" name="location" value="3" disabled> 長者ヶ崎海岸監視所</label>
+          <label><input type="radio" name="location" value="4" disabled> イベント</label>
         </div>
         <div class="form-group">
           <label for="date">日付*</label>
@@ -87,13 +78,14 @@
   </form>
   <div id="overlay" style="display: none;"></div>
 
-  <div id="siteSelector" class="modal">
+  <div id="locationSelector" class="modal">
     <div class="modal-content">
       <h2>監視所を選択してください</h2>
-      <div class="site-buttons">
-        <button type="button" location="1">森戸海岸<br>監視所</button>
-        <button type="button" location="2">一色海岸<br>監視所</button>
-        <button type="button" location="3">長者ヶ崎海岸<br>監視所</button>
+      <div class="location-buttons">
+        <button type="button" location="1">森戸海岸監視所</button>
+        <button type="button" location="2">一色海岸監視所</button>
+        <button type="button" location="3">長者ヶ崎海岸監視所</button>
+        <button type="button" location="4">イベント</button>
       </div>
     </div>
   </div>

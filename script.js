@@ -141,11 +141,11 @@ $(document).ready(function () {
 
 document.addEventListener('DOMContentLoaded', function () {
   // モーダルを表示
-  const modal = document.getElementById('siteSelector');
+  const modal = document.getElementById('locationSelector');
   modal.style.display = 'block';
 
   // サイト選択ボタンのイベントリスナー
-  const siteButtons = document.querySelectorAll('.site-buttons button');
+  const siteButtons = document.querySelectorAll('.location-buttons button');
   siteButtons.forEach(button => {
     button.addEventListener('click', function () {
       const location = this.getAttribute('location');
@@ -163,6 +163,9 @@ document.addEventListener('DOMContentLoaded', function () {
           break;
         case '3':
           title.textContent = '出勤簿登録サイト(長者ヶ崎海岸)';
+          break;
+        case '4':
+          title.textContent = '出勤簿登録サイト(イベント)';
           break;
       }
 
