@@ -81,14 +81,20 @@ $(document).ready(function () {
         date: $('#date').val(),
         location: $('input[name="location"]:checked').val(),
         recorder: $('#recorder').val(),
-        supervisor: $('#supervisor').val(),
-        workType: $('input[name="workType"]:checked').val(),
-        nameEvent: $('input[name="workType"]:checked').val() === '2' ? $('#nameEvent').val() : ''
+        supervisor: $('#supervisor').val()
       };
 
       const details = [];
       $('#attendanceTableBody tr').each(function () {
         const name = $(this).find('input[name="name"]').val();
+        // 時間勤務の場合は勤務時間を計算
+        const workhours = $(this).find('input[name^="shiftType"]:checked').val() === '2'
+          ? calculateWorkHours(
+            $(this).find('input[name^="startTime"]').val(),
+            $(this).find('input[name^="endTime"]').val()
+          )
+          : '';
+
         if (name) {
           details.push({
             name: name,
@@ -99,6 +105,7 @@ $(document).ready(function () {
             endTime: $(this).find('input[name^="shiftType"]:checked').val() === '2'
               ? $(this).find('input[name^="endTime"]').val()
               : '',
+            workhours: workhours >= 6 ? workhours - 1 : workhours, // 6時間以上の場合は1時間減らす
             batchTest: $(this).find('input[name="batchTest"]').prop('checked'),
             remarks: $(this).find('input[name="remarks"]').val()
           });
@@ -137,6 +144,13 @@ $(document).ready(function () {
       $('#overlay').hide();
     }
   });
+  // 時間計算用のヘルパー関数を追加
+  function calculateWorkHours(startTime, endTime) {
+    const start = new Date(`1970-01-01T${startTime}`);
+    const end = new Date(`1970-01-01T${endTime}`);
+    const diffInMinutes = (end - start) / (1000 * 60); // ミリ秒を分に変換
+    return Math.round((diffInMinutes / 60) * 100) / 100; // 時間に変換して小数点第2位まで
+  }
 });
 
 document.addEventListener('DOMContentLoaded', function () {
