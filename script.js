@@ -46,7 +46,8 @@ function initAutocomplete() {
       );
       response(matches.map(item => item[0]));
     },
-    minLength: 1
+    minLength: 1,
+    delay: 0
   });
 }
 //名前マスタの取得
