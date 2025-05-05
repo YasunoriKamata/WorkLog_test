@@ -109,7 +109,7 @@ async function execRegist() {
 
     const headerData = {
       type: 'header',
-      date: $('#date').val(),
+      date: $('#date').val().replace(/-/g, '/'),
       location: $('input[name="location"]:checked').val(),
       recorder: $('#recorder').val(),
       supervisor: $('#supervisor').val()
@@ -175,6 +175,61 @@ async function execRegist() {
     $('#overlay').hide();
   }
 }
+
+//削除処理
+async function execDelete() {
+  try {
+    //日付が未入力の場合、アラート
+    if (!$('#date').val()) {
+      alert('日付を入力してください。');
+      return;
+    }
+
+    const formattedDate = $('#date').val().replace(/-/g, '/');
+    let msg = '';
+    switch ($('input[name="location"]:checked').val()) {
+      case '1':
+        msg = '森戸海岸'
+        break;
+      case '2':
+        msg = '一色海岸'
+        break;
+      case '3':
+        msg = '長者ヶ崎海岸'
+        break;
+      case '4':
+        msg = 'イベント'
+        break;
+    }
+    if (confirm(`${msg}：${formattedDate}の登録済みデータを削除します。\n※この処理は取り消せません。`)) {
+      $('body').css('cursor', 'wait');
+      $('#overlay').show();
+
+      //削除データ作成
+      const deleteData = {
+        type: 'delete',
+        date: formattedDate,
+        location: $('input[name="location"]:checked').val()
+      };
+      //削除処理実行
+      await fetch(GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(deleteData)
+      });
+
+      $('html, body').animate({ scrollTop: 0 }, 'normal');
+      alert('正常に削除されました。');
+    }
+  } catch (error) {
+    console.error('エラーが発生しました:', error);
+    alert('削除処理に失敗しました');
+  } finally {
+    $('body').css('cursor', 'default');
+    $('#overlay').hide();
+  }
+}
 // 時間計算用のヘルパー関数を追加
 function calculateWorkHours(startTime, endTime) {
   const start = new Date(`1970-01-01T${startTime}`);
@@ -200,16 +255,16 @@ document.addEventListener('DOMContentLoaded', function () {
       // 場所に応じてタイトルを変更
       switch (location) {
         case '1':
-          title.textContent = '出勤簿登録サイト(森戸海岸)';
+          title.textContent += '(森戸海岸)'
           break;
         case '2':
-          title.textContent = '出勤簿登録サイト(一色海岸)';
+          title.textContent += '(一色海岸)'
           break;
         case '3':
-          title.textContent = '出勤簿登録サイト(長者ヶ崎海岸)';
+          title.textContent += '(長者ヶ崎海岸)'
           break;
         case '4':
-          title.textContent = '出勤簿登録サイト(イベント)';
+          title.textContent += '(イベント)'
           break;
       }
 
