@@ -1,0 +1,214 @@
+// 出勤簿登録用スクリプト
+// 定数定義
+const SHEET_NAMES = {
+  HEADER: 'ヘッダー',
+  DETAIL: '明細'
+};
+
+function doPost(e) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const data = JSON.parse(e.postData.contents);
+
+  try {
+    switch (data.type) {
+      case 'header':
+        return saveHeaderData(ss, data);
+      case 'detail':
+        return saveDetailData(ss, data);
+      case 'delete':
+        return deleteData(ss, data);
+    }
+  } catch (error) {
+    return createErrorResponse(error);
+  }
+}
+
+function saveHeaderData(ss, data) {
+  const headerSheet = ss.getSheetByName(SHEET_NAMES.HEADER);
+  const headerRow = [
+    data.date,       // 日付
+    data.location,   // 監視所
+    data.recorder,   // 記入者
+    data.supervisor, // 監視長
+    new Date()       //timestamp
+  ];
+
+  headerSheet.appendRow(headerRow);
+  return createSuccessResponse('ヘッダーデータが保存されました');
+}
+
+function saveDetailData(ss, data) {
+  const detailSheet = ss.getSheetByName(SHEET_NAMES.DETAIL);
+  const details = data.details.map(detail => [
+    data.date,         // 日付
+    data.location,     // 監視所
+    detail.name,       // 名前
+    detail.volunteer ? '1' : '0',  // ボランティア
+    detail.shiftType,  // 勤務形態
+    detail.startTime,  // 出勤時刻
+    detail.endTime,    // 退勤時刻
+    detail.workhours,  // 実働時間
+    detail.batchTest ? '1' : '0', // バッチテスト
+    detail.remarks,    // 備考
+    new Date()         //timestamp
+  ]);
+
+  // 一括で行を追加
+  detailSheet.getRange(
+    detailSheet.getLastRow() + 1,
+    1,
+    details.length,
+    details[0].length
+  ).setValues(details);
+
+  return createSuccessResponse('明細データが保存されました');
+}
+function createSuccessResponse(message) {
+  return ContentService.createTextOutput(JSON.stringify({
+    'status': 'success',
+    'message': message
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+function createErrorResponse(error) {
+  return ContentService.createTextOutput(JSON.stringify({
+    'status': 'error',
+    'message': error.toString()
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function deleteData(ss, data) {
+  var sheets = ss.getSheets();
+  var targetDate = data.date;
+  var targetLocation = data.location;
+
+  sheets.forEach(function (sheet) {
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 1) return; // データがなければスキップ
+
+    var values = sheet.getRange(1, 1, lastRow, 2).getValues();
+    for (var row = lastRow; row >= 1; row--) {
+      var cellDate = formatDate(new Date(values[row - 1][0]));
+      var cellLocation = String(values[row - 1][1]);
+
+      if (cellDate === targetDate && cellLocation === targetLocation) {
+        sheet.deleteRow(row);
+      }
+    }
+  });
+}
+
+// 管理者用スクリプト
+const LOCATIONS = {
+  MORITO: { id: '1', key: 'morito' },
+  ISSHIKI: { id: '2', key: 'isshiki' },
+  CHOJAGASAKI: { id: '3', key: 'chojagasaki' },
+  EVENT: { id: '4', key: 'event' }
+};
+
+// メイン処理
+function doGet(e) {
+  const output = ContentService.createTextOutput().setMimeType(ContentService.MimeType.JSON);
+
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+    const locationResults = {};
+    const headerData = getHeaderData(ss);
+    const detailData = getDetailData(ss);
+
+    processHeaderData(headerData, locationResults);
+    processDetailData(detailData, locationResults);
+
+    output.setContent(JSON.stringify({
+      status: 'success',
+      ...locationResults
+    }));
+
+  } catch (error) {
+    output.setContent(JSON.stringify({
+      status: 'error',
+      message: error.toString()
+    }));
+  }
+
+  return output;
+}
+
+// ヘッダーデータの取得（全件）
+function getHeaderData(ss) {
+  const headerSheet = ss.getSheetByName(SHEET_NAMES.HEADER);
+  const headerLastRow = headerSheet.getLastRow();
+  if (headerLastRow < 2) return []; // データがない場合
+
+  return headerSheet.getRange(2, 1, headerLastRow - 1, 4).getValues();
+}
+
+// 明細データの取得（全件）
+function getDetailData(ss) {
+  const detailSheet = ss.getSheetByName(SHEET_NAMES.DETAIL);
+  const detailLastRow = detailSheet.getLastRow();
+  if (detailLastRow < 2) return [];
+
+  return detailSheet.getRange(2, 1, detailLastRow - 1, 9).getValues();
+}
+
+// ヘッダーデータの処理
+function processHeaderData(headerData, results) {
+  headerData.forEach(row => {
+    const date = formatDate(new Date(row[0]));
+    const locationId = row[1].toString();
+    const writer = row[2];
+    const supervisor = row[3];
+
+    const location = Object.values(LOCATIONS).find(loc => loc.id === locationId);
+    if (!location) return;
+
+    if (!results[date]) results[date] = {};
+    if (!results[date][location.key]) {
+      results[date][location.key] = { writer: '', supervisor: '', details: [] };
+    }
+
+    results[date][location.key].writer = writer;
+    results[date][location.key].supervisor = supervisor;
+  });
+}
+
+// 明細データの処理
+function processDetailData(detailData, results) {
+  detailData.forEach(row => {
+    const date = formatDate(new Date(row[0]));
+    const locationId = row[1].toString();
+    const detailInfo = {
+      name: row[2],
+      type: row[3],
+      startTime: formatTime(row[4]),
+      endTime: formatTime(row[5]),
+      batchTest: row[7],
+      remarks: row[8]
+    };
+
+    const location = Object.values(LOCATIONS).find(loc => loc.id === locationId);
+    if (!location) return;
+
+    if (!results[date]) results[date] = {};
+    if (!results[date][location.key]) {
+      results[date][location.key] = { writer: '', supervisor: '', details: [] };
+    }
+
+    results[date][location.key].details.push(detailInfo);
+  });
+}
+
+// 日付フォーマット（yyyy/MM/dd）
+function formatDate(date) {
+  return Utilities.formatDate(date, 'JST', 'yyyy/MM/dd');
+}
+
+// 時刻フォーマット（HH:mm）
+function formatTime(date) {
+  if (!date) return '';
+  const d = new Date(date);
+  const hours = d.getHours().toString().padStart(2, '0');
+  const minutes = d.getMinutes().toString().padStart(2, '0');
+  return `${hours}:${minutes}`;
+}

@@ -2,10 +2,12 @@
 <html lang="ja">
 
 <head>
+  <!-- 恥ずかしいからソースコード見んといて By釜田 -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="葉山ライフセービングクラブの出勤簿登録システム">
+  <meta name="description" content="葉山ライフセービングクラブの出勤簿登録サイト">
   <meta name="author" content="Yasunori Kamata">
+  <meta name="robots" content="none">
   <title>出勤簿登録サイト</title>
 
   <!-- スタイルシート -->
@@ -34,8 +36,8 @@
           <label><input type="radio" name="location" value="4" disabled> イベント</label>
         </div>
         <div class="form-group">
-          <label for="date">日付*</label>
-          <input type="date" id="date" name="date" required>
+          <label for="date">日付</label>
+          <input type="date" id="date" name="date" disabled>
         </div>
         <div class="form-group">
           <label for="recorder">記入者*</label>
@@ -55,6 +57,7 @@
         <thead>
           <tr>
             <th>名前</th>
+            <th>ボランティア</th>
             <th>勤務形態</th>
             <th>出勤時刻</th>
             <th>退勤時刻</th>
@@ -65,6 +68,25 @@
         <tbody>
         <tbody id="attendanceTableBody">
           <!-- ここに行が動的に追加される -->
+          <datalist id="data-list">
+            <option value="09:00"></option>
+            <option value="09:30"></option>
+            <option value="10:00"></option>
+            <option value="10:30"></option>
+            <option value="11:00"></option>
+            <option value="11:30"></option>
+            <option value="12:00"></option>
+            <option value="12:30"></option>
+            <option value="13:00"></option>
+            <option value="13:30"></option>
+            <option value="14:00"></option>
+            <option value="14:30"></option>
+            <option value="15:00"></option>
+            <option value="15:30"></option>
+            <option value="16:00"></option>
+            <option value="16:30"></option>
+            <option value="17:00"></option>
+          </datalist>
         </tbody>
       </table>
     </section>
