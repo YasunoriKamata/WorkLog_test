@@ -13,16 +13,16 @@ const ROW_TEMPLATE = `
         <td data-label="備考"><input type="text" name="remarks" placeholder="備考"></td>
     </tr>
   `;
-const AUTOCOMPLETE_URL = "https://script.google.com/macros/s/AKfycbxpmVaEqKuk_YU2w79Rojsc_0vBLh8aNWvCUOK61NmDi2ib672f7XqjXYtZQW8Z7GTn/exec";
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyu0mCvUeOs_wMg0PZExPkK1_MnEhT4f8vdGsmoZjBo1YMg5pIovVHHYvXpg1XdCClz/exec";
+const NAMELIST_URL = "https://script.google.com/macros/s/AKfycbxpmVaEqKuk_YU2w79Rojsc_0vBLh8aNWvCUOK61NmDi2ib672f7XqjXYtZQW8Z7GTn/exec";
+const WORKLOG_URL = "https://script.google.com/macros/s/AKfycbyu0mCvUeOs_wMg0PZExPkK1_MnEhT4f8vdGsmoZjBo1YMg5pIovVHHYvXpg1XdCClz/exec";
 const ROWS = 15;
 let nameMasterCache = [];
 
 $(document).ready(function () {
-  // 行の動的追加
-  initRows();
   // マスタデータの読み込み
   getMasterData();
+  // 行の動的追加
+  initRows();
   // 今日の日付を設定
   document.getElementById('date').value = new Date().toISOString().split('T')[0];
 });
@@ -33,11 +33,12 @@ function initRows() {
     const rowWithIndex = ROW_TEMPLATE.replace(/{index}/g, i + 1);
     $("#attendanceTableBody").append(rowWithIndex);
   }
-  // 最初の行は入力不可
+  // 最初の行の名前は入力不可
   $('#attendanceTableBody tr:first-child input[name^="name"]').prop("disabled", true);
   // 行追加後にオートコンプリートを初期化
   initAutocomplete();
 }
+
 //名前の入力補助
 function initAutocomplete() {
   $(".autocomplete-input").autocomplete({
@@ -55,26 +56,21 @@ function initAutocomplete() {
 }
 //名前マスタの取得
 async function getMasterData() {
+  //キャッシュを削除
+  nameMasterCache = [];
+  console.log(`マスタデータ取得開始 [${new Date().toISOString()}]`);
   try {
-    $('body').css('cursor', 'wait');
-    $('#overlay').show();
-    //キャッシュを削除
-    nameMasterCache = [];
-    console.log(`マスタデータを取得します... [${new Date().toISOString()}]`);
-    const response = await fetch(AUTOCOMPLETE_URL, {
+    const response = await fetch(NAMELIST_URL, {
       method: 'GET',
-      mode: 'cors'
+      mode: 'cors',
     });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     nameMasterCache = await response.json();
-    console.log(`マスタデータを取得しました... [${new Date().toISOString()}]`);
+    console.log(`マスタデータ取得完了 [${new Date().toISOString()}]`);
   } catch (error) {
-    console.error('マスタデータの取得に失敗しました:', error);
-  } finally {
-    $('body').css('cursor', 'default');
-    $('#overlay').hide();
+    console.error(`マスタデータ取得失敗 [${new Date().toISOString()}]：`, error);
   }
 }
 
@@ -88,10 +84,19 @@ async function reloadMaster() {
     await getMasterData();
     // オートコンプリートを再初期化
     initAutocomplete();
-    alert('マスタデータを再読み込みしました。');
+    Swal.fire({
+      title: "Succcess",
+      text: "マスタデータを再読込しました",
+      icon: "success",
+      showConfirmButton: false,
+      timer: 1500
+    });
   } catch (error) {
-    console.error('マスタデータの再読み込みに失敗しました:', error);
-    alert('マスタデータの再読み込みに失敗しました。');
+    Swal.fire({
+      icon: "error",
+      title: "Oops...",
+      text: "マスタデータを再読込に失敗しました",
+    });
   } finally {
     $('body').css('cursor', 'default');
     $('#overlay').hide();
@@ -110,13 +115,7 @@ async function execRegist() {
     $('body').css('cursor', 'wait');
     $('#overlay').show();
 
-    const headerData = {
-      type: 'header',
-      date: $('#date').val().replace(/-/g, '/'),
-      location: $('input[name="location"]:checked').val(),
-      recorder: $('#recorder').val(),
-      supervisor: $('#supervisor').val()
-    };
+    console.log(`出勤簿データ登録開始 [${new Date().toISOString()}]`);
 
     const details = [];
     $('#attendanceTableBody tr').each(function () {
@@ -147,32 +146,42 @@ async function execRegist() {
       }
     });
 
-    const detailData = {
-      type: 'detail',
-      date: headerData.date,
-      location: headerData.location,
+    const requestData = {
+      type: 'regist',
+      date: $('#date').val().replace(/-/g, '/'),
+      location: $('input[name="location"]:checked').val(),
+      recorder: $('#recorder').val(),
+      supervisor: $('#supervisor').val(),
       details: details
     };
 
-    await fetch(GAS_URL, {
+    const response = await fetch(WORKLOG_URL, {
       method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(headerData)
+      mode: 'cors',
+      body: JSON.stringify(requestData)
     });
 
-    await fetch(GAS_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(detailData)
-    });
+    const result = await response.json();
+    if (result.status === 'error') {
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        html: result.message,
+      });
+      return;
+    }
 
+    console.log(`出勤簿データ登録終了 [${new Date().toISOString()}]`);
     $('html, body').animate({ scrollTop: 0 }, 'normal');
-    alert('正常に登録されました。お疲れ様です！');
-
+    Swal.fire({
+      title: "Good job!",
+      text: "正常に登録されました。お疲れ様です！",
+      icon: "success",
+      showConfirmButton: false,
+      timer: 1500
+    });
   } catch (error) {
-    console.error('エラーが発生しました:', error);
+    console.error(`出勤簿データ登録失敗 [${new Date().toISOString()}]：`, error);
     alert('登録に失敗しました');
   } finally {
     $('body').css('cursor', 'default');
@@ -182,57 +191,83 @@ async function execRegist() {
 
 //削除処理
 async function execDelete() {
-  try {
-    //日付が未入力の場合、アラート
-    if (!$('#date').val()) {
-      alert('日付を入力してください。');
-      return;
-    }
 
-    const formattedDate = $('#date').val().replace(/-/g, '/');
-    let msg = '';
-    switch ($('input[name="location"]:checked').val()) {
-      case '1':
-        msg = '森戸海岸'
-        break;
-      case '2':
-        msg = '一色海岸'
-        break;
-      case '3':
-        msg = '長者ヶ崎海岸'
-        break;
-      case '4':
-        msg = 'イベント'
-        break;
-    }
-    if (confirm(`${msg}：${formattedDate}の登録済みデータを削除します。\n※この処理は取り消せません。`)) {
+  //日付が未入力の場合、アラート
+  if (!$('#date').val()) {
+    alert('日付を入力してください。');
+    return;
+  }
+
+  const formattedDate = $('#date').val().replace(/-/g, '/');
+  let msg = '';
+  switch ($('input[name="location"]:checked').val()) {
+    case '1':
+      msg = '森戸海岸'
+      break;
+    case '2':
+      msg = '一色海岸'
+      break;
+    case '3':
+      msg = '長者ヶ崎海岸'
+      break;
+    case '4':
+      msg = 'イベント'
+      break;
+  }
+
+  Swal.fire({
+    title: "Are you sure?",
+    html: `${msg}：${formattedDate}の登録済みデータを削除します。\n※この処理は取り消せません。`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    confirmButtonText: "削除実行"
+  }).then(async (result) => {
+    if (result.isConfirmed) {
       $('body').css('cursor', 'wait');
       $('#overlay').show();
 
-      //削除データ作成
-      const deleteData = {
-        type: 'delete',
-        date: formattedDate,
-        location: $('input[name="location"]:checked').val()
-      };
-      //削除処理実行
-      await fetch(GAS_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(deleteData)
-      });
+      try {
+        console.error('削除処理開始:', new Date().toISOString());
+        //削除データ作成
+        const deleteData = {
+          type: 'delete',
+          date: formattedDate,
+          location: $('input[name="location"]:checked').val()
+        };
+        //削除処理実行
+        const response = await fetch(WORKLOG_URL, {
+          method: 'POST',
+          mode: 'cors',
+          body: JSON.stringify(deleteData)
+        });
 
-      $('html, body').animate({ scrollTop: 0 }, 'normal');
-      alert('正常に削除されました。');
+        const result = await response.json();
+        if (result.status === 'error') {
+          throw new Error(result.message);
+        }
+
+        $('html, body').animate({ scrollTop: 0 }, 'normal');
+        Swal.fire({
+          title: "Deleted!",
+          text: "正常に削除されました。",
+          icon: "success"
+        });
+      } catch (error) {
+        console.error('削除処理失敗:', error);
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: "削除処理に失敗しました",
+        });
+      } finally {
+        console.error('削除処理完了:', new Date().toISOString());
+        $('body').css('cursor', 'default');
+        $('#overlay').hide();
+      }
     }
-  } catch (error) {
-    console.error('エラーが発生しました:', error);
-    alert('削除処理に失敗しました');
-  } finally {
-    $('body').css('cursor', 'default');
-    $('#overlay').hide();
-  }
+  });
 }
 // 時間計算用のヘルパー関数を追加
 function calculateWorkHours(startTime, endTime) {
@@ -250,12 +285,13 @@ document.addEventListener('DOMContentLoaded', function () {
   // サイト選択ボタンのイベントリスナー
   const siteButtons = document.querySelectorAll('.location-buttons button');
   siteButtons.forEach(button => {
-    button.addEventListener('click', function () {
+    button.addEventListener('click', async function () {
       const location = this.getAttribute('location');
       const title = document.querySelector('h1');
 
       // 場所に応じてラジオボタンのチェックを変更
       $(`input[name="location"][value="${location}"]`).prop('checked', true);
+
       // 場所に応じてタイトルを変更
       switch (location) {
         case '1':
@@ -271,7 +307,6 @@ document.addEventListener('DOMContentLoaded', function () {
           title.textContent += '(イベント)'
           break;
       }
-
       // モーダルを非表示
       modal.style.display = 'none';
     });

@@ -11,10 +11,8 @@ function doPost(e) {
 
   try {
     switch (data.type) {
-      case 'header':
-        return saveHeaderData(ss, data);
-      case 'detail':
-        return saveDetailData(ss, data);
+      case 'regist':
+        return registData(ss, data);
       case 'delete':
         return deleteData(ss, data);
     }
@@ -22,47 +20,62 @@ function doPost(e) {
     return createErrorResponse(error);
   }
 }
+// データ登録処理
+function registData(ss, data) {
+  // トランザクション処理のため、エラーが発生した場合は両方の保存を行わない
+  try {
+    // 既存データの存在チェック
+    const headerSheet = ss.getSheetByName(SHEET_NAMES.HEADER);
+    const headerLastRow = headerSheet.getLastRow();
+    if (headerLastRow > 1) {
+      const headerValues = headerSheet.getRange(2, 1, headerLastRow - 1, 2).getValues();
+      for (let i = 0; i < headerValues.length; i++) {
+        const cellDate = formatDate(new Date(headerValues[i][0]));
+        const cellLocation = String(headerValues[i][1]);
+        if (cellDate === data.date && cellLocation === data.location) {
+          return createErrorResponse('既に登録済みのデータがあります。\n一度削除してから再度登録してください。');
+        }
+      }
+    }
+    // ヘッダーデータの保存
+    const headerRow = [
+      data.date,       // 日付
+      data.location,   // 監視所
+      data.recorder,   // 記入者
+      data.supervisor, // 監視長
+      new Date()       // timestamp
+    ];
+    headerSheet.appendRow(headerRow);
 
-function saveHeaderData(ss, data) {
-  const headerSheet = ss.getSheetByName(SHEET_NAMES.HEADER);
-  const headerRow = [
-    data.date,       // 日付
-    data.location,   // 監視所
-    data.recorder,   // 記入者
-    data.supervisor, // 監視長
-    new Date()       //timestamp
-  ];
+    // 明細データの保存
+    const detailSheet = ss.getSheetByName(SHEET_NAMES.DETAIL);
+    const details = data.details.map(detail => [
+      data.date,         // 日付
+      data.location,     // 監視所
+      detail.name,       // 名前
+      detail.volunteer ? '1' : '0',  // ボランティア
+      detail.shiftType,  // 勤務形態
+      detail.startTime,  // 出勤時刻
+      detail.endTime,    // 退勤時刻
+      detail.workhours,  // 実働時間
+      detail.batchTest ? '1' : '0', // バッチテスト
+      detail.remarks,    // 備考
+      new Date()         // timestamp
+    ]);
 
-  headerSheet.appendRow(headerRow);
-  return createSuccessResponse('ヘッダーデータが保存されました');
+    detailSheet.getRange(
+      detailSheet.getLastRow() + 1,
+      1,
+      details.length,
+      details[0].length
+    ).setValues(details);
+
+    return createSuccessResponse('データが正常に保存されました');
+  } catch (error) {
+    throw new Error('データの保存中にエラーが発生しました: ' + error.message);
+  }
 }
 
-function saveDetailData(ss, data) {
-  const detailSheet = ss.getSheetByName(SHEET_NAMES.DETAIL);
-  const details = data.details.map(detail => [
-    data.date,         // 日付
-    data.location,     // 監視所
-    detail.name,       // 名前
-    detail.volunteer ? '1' : '0',  // ボランティア
-    detail.shiftType,  // 勤務形態
-    detail.startTime,  // 出勤時刻
-    detail.endTime,    // 退勤時刻
-    detail.workhours,  // 実働時間
-    detail.batchTest ? '1' : '0', // バッチテスト
-    detail.remarks,    // 備考
-    new Date()         //timestamp
-  ]);
-
-  // 一括で行を追加
-  detailSheet.getRange(
-    detailSheet.getLastRow() + 1,
-    1,
-    details.length,
-    details[0].length
-  ).setValues(details);
-
-  return createSuccessResponse('明細データが保存されました');
-}
 function createSuccessResponse(message) {
   return ContentService.createTextOutput(JSON.stringify({
     'status': 'success',
@@ -76,6 +89,7 @@ function createErrorResponse(error) {
   })).setMimeType(ContentService.MimeType.JSON);
 }
 
+// データ削除処理
 function deleteData(ss, data) {
   var sheets = ss.getSheets();
   var targetDate = data.date;
