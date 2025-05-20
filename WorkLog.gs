@@ -33,7 +33,7 @@ function registData(ss, data) {
         const cellDate = formatDate(new Date(headerValues[i][0]));
         const cellLocation = String(headerValues[i][1]);
         if (cellDate === data.date && cellLocation === data.location) {
-          return createErrorResponse('既に登録済みのデータがあります。\n一度削除してから再度登録してください。');
+          return createErrorResponse('既に登録済みのデータがあります。<br>一度削除してから再度登録してください。');
         }
       }
     }
@@ -94,21 +94,31 @@ function deleteData(ss, data) {
   var sheets = ss.getSheets();
   var targetDate = data.date;
   var targetLocation = data.location;
+  var targetData = false;
 
-  sheets.forEach(function (sheet) {
-    var lastRow = sheet.getLastRow();
-    if (lastRow < 1) return; // データがなければスキップ
+  try {
+    sheets.forEach(function (sheet) {
+      var lastRow = sheet.getLastRow();
+      if (lastRow < 1) return; // シートが空の場合はスキップ
 
-    var values = sheet.getRange(1, 1, lastRow, 2).getValues();
-    for (var row = lastRow; row >= 1; row--) {
-      var cellDate = formatDate(new Date(values[row - 1][0]));
-      var cellLocation = String(values[row - 1][1]);
+      var values = sheet.getRange(1, 1, lastRow, 2).getValues();
+      for (var row = lastRow; row >= 1; row--) {
+        var cellDate = formatDate(new Date(values[row - 1][0]));
+        var cellLocation = String(values[row - 1][1]);
 
-      if (cellDate === targetDate && cellLocation === targetLocation) {
-        sheet.deleteRow(row);
+        if (cellDate === targetDate && cellLocation === targetLocation) {
+          sheet.deleteRow(row);
+          targetData = true;
+        }
       }
+    });
+    if (!targetData) {
+      return createErrorResponse('削除対象のデータがありません。');
     }
-  });
+    return createSuccessResponse('データが正常に削除されました');
+  } catch (error) {
+    throw new Error('データの削除中にエラーが発生しました: ' + error.message);
+  }
 }
 
 // 管理者用スクリプト

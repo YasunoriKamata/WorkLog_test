@@ -27,33 +27,6 @@ $(document).ready(function () {
   document.getElementById('date').value = new Date().toISOString().split('T')[0];
 });
 
-// 行の動的追加
-function initRows() {
-  for (let i = 0; i < ROWS; i++) {
-    const rowWithIndex = ROW_TEMPLATE.replace(/{index}/g, i + 1);
-    $("#attendanceTableBody").append(rowWithIndex);
-  }
-  // 最初の行の名前は入力不可
-  $('#attendanceTableBody tr:first-child input[name^="name"]').prop("disabled", true);
-  // 行追加後にオートコンプリートを初期化
-  initAutocomplete();
-}
-
-//名前の入力補助
-function initAutocomplete() {
-  $(".autocomplete-input").autocomplete({
-    source: function (request, response) {
-      const term = request.term.toLowerCase();
-      const matches = nameMasterCache.filter(item =>
-        item[0].toLowerCase().startsWith(term) ||
-        item[1].toLowerCase().startsWith(term)
-      );
-      response(matches.map(item => item[0]));
-    },
-    minLength: 1,
-    delay: 0
-  });
-}
 //名前マスタの取得
 async function getMasterData() {
   //キャッシュを削除
@@ -72,6 +45,32 @@ async function getMasterData() {
   } catch (error) {
     console.error(`マスタデータ取得失敗 [${new Date().toISOString()}]：`, error);
   }
+  // オートコンプリートを再初期化
+  initAutocomplete();
+}
+//名前の入力補助
+function initAutocomplete() {
+  $(".autocomplete-input").autocomplete({
+    source: function (request, response) {
+      const term = request.term.toLowerCase();
+      const matches = nameMasterCache.filter(item =>
+        item[0].toLowerCase().startsWith(term) ||
+        item[1].toLowerCase().startsWith(term)
+      );
+      response(matches.map(item => item[0]));
+    },
+    minLength: 1,
+    delay: 0
+  });
+}
+// 行の動的追加
+function initRows() {
+  for (let i = 0; i < ROWS; i++) {
+    const rowWithIndex = ROW_TEMPLATE.replace(/{index}/g, i + 1);
+    $("#attendanceTableBody").append(rowWithIndex);
+  }
+  // 最初の行の名前は入力不可
+  $('#attendanceTableBody tr:first-child input[name^="name"]').prop("disabled", true);
 }
 
 // ボタン処理
@@ -82,8 +81,7 @@ async function reloadMaster() {
     $('#overlay').show();
     // マスタデータを再取得
     await getMasterData();
-    // オートコンプリートを再初期化
-    initAutocomplete();
+
     Swal.fire({
       title: "Succcess",
       text: "マスタデータを再読込しました",
@@ -95,7 +93,7 @@ async function reloadMaster() {
     Swal.fire({
       icon: "error",
       title: "Oops...",
-      text: "マスタデータを再読込に失敗しました",
+      text: "マスタデータの再読込に失敗しました",
     });
   } finally {
     $('body').css('cursor', 'default');
@@ -163,26 +161,32 @@ async function execRegist() {
 
     const result = await response.json();
     if (result.status === 'error') {
+      //既存データがある場合などはここに入る
       Swal.fire({
         icon: "error",
         title: "Oops...",
         html: result.message,
       });
+      console.log(`出勤簿データ登録失敗 既存データ有り？：[${new Date().toISOString()}]`);
       return;
     }
 
     console.log(`出勤簿データ登録終了 [${new Date().toISOString()}]`);
-    $('html, body').animate({ scrollTop: 0 }, 'normal');
-    Swal.fire({
+    await Swal.fire({
       title: "Good job!",
       text: "正常に登録されました。お疲れ様です！",
       icon: "success",
       showConfirmButton: false,
-      timer: 1500
+      timer: 2000
     });
+    $('html, body').animate({ scrollTop: 0 }, 'normal');
   } catch (error) {
     console.error(`出勤簿データ登録失敗 [${new Date().toISOString()}]：`, error);
-    alert('登録に失敗しました');
+    Swal.fire({
+      icon: "error",
+      title: "Oops...",
+      html: error.message,
+    });
   } finally {
     $('body').css('cursor', 'default');
     $('#overlay').hide();
@@ -191,13 +195,6 @@ async function execRegist() {
 
 //削除処理
 async function execDelete() {
-
-  //日付が未入力の場合、アラート
-  if (!$('#date').val()) {
-    alert('日付を入力してください。');
-    return;
-  }
-
   const formattedDate = $('#date').val().replace(/-/g, '/');
   let msg = '';
   switch ($('input[name="location"]:checked').val()) {
@@ -217,7 +214,7 @@ async function execDelete() {
 
   Swal.fire({
     title: "Are you sure?",
-    html: `${msg}：${formattedDate}の登録済みデータを削除します。\n※この処理は取り消せません。`,
+    html: `${msg}：${formattedDate}の登録済みデータを削除します。<br>※この処理は取り消せません。`,
     icon: "warning",
     showCancelButton: true,
     confirmButtonColor: "#3085d6",
@@ -229,7 +226,7 @@ async function execDelete() {
       $('#overlay').show();
 
       try {
-        console.error('削除処理開始:', new Date().toISOString());
+        console.log('削除処理開始:', new Date().toISOString());
         //削除データ作成
         const deleteData = {
           type: 'delete',
@@ -245,24 +242,32 @@ async function execDelete() {
 
         const result = await response.json();
         if (result.status === 'error') {
-          throw new Error(result.message);
+          //削除データがない場合などはここに入る
+          Swal.fire({
+            icon: "error",
+            title: "Oops...",
+            text: result.message,
+          });
+          console.log(`出勤簿データ登録失敗 削除データ無し？：[${new Date().toISOString()}]`);
+          return
         }
 
-        $('html, body').animate({ scrollTop: 0 }, 'normal');
-        Swal.fire({
+        console.log('削除処理完了:', new Date().toISOString());
+        await Swal.fire({
           title: "Deleted!",
           text: "正常に削除されました。",
-          icon: "success"
+          icon: "success",
+          showConfirmButton: false,
+          timer: 2000
         });
       } catch (error) {
-        console.error('削除処理失敗:', error);
+        console.error(`削除処理失敗 [${new Date().toISOString()}]：`, error);
         Swal.fire({
           icon: "error",
           title: "Oops...",
           text: "削除処理に失敗しました",
         });
       } finally {
-        console.error('削除処理完了:', new Date().toISOString());
         $('body').css('cursor', 'default');
         $('#overlay').hide();
       }
