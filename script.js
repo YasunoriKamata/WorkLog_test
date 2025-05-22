@@ -24,14 +24,14 @@ $(document).ready(function () {
   // 行の動的追加
   initRows();
   // 今日の日付を設定
-  document.getElementById('date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('date').value = getJSTISOString().slice(0, 10);
 });
 
 //名前マスタの取得
 async function getMasterData() {
   //キャッシュを削除
   nameMasterCache = [];
-  console.log(`マスタデータ取得開始 [${new Date().toISOString()}]`);
+  console.log(`マスタデータ取得開始：[${getJSTISOString()}]`);
   try {
     const response = await fetch(NAMELIST_URL, {
       method: 'GET',
@@ -41,9 +41,9 @@ async function getMasterData() {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     nameMasterCache = await response.json();
-    console.log(`マスタデータ取得完了 [${new Date().toISOString()}]`);
+    console.log(`マスタデータ取得完了：[${getJSTISOString()}]`);
   } catch (error) {
-    console.error(`マスタデータ取得失敗 [${new Date().toISOString()}]：`, error);
+    console.error(`マスタデータ取得失敗：[${getJSTISOString()}]：`, error);
   }
   // オートコンプリートを再初期化
   initAutocomplete();
@@ -112,8 +112,15 @@ async function execRegist() {
 
     $('body').css('cursor', 'wait');
     $('#overlay').show();
+    Swal.fire({
+      title: '登録中です...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
 
-    console.log(`出勤簿データ登録開始 [${new Date().toISOString()}]`);
+    console.log(`出勤簿データ登録開始：[${getJSTISOString()}]`);
 
     const details = [];
     $('#attendanceTableBody tr').each(function () {
@@ -159,29 +166,35 @@ async function execRegist() {
       body: JSON.stringify(requestData)
     });
 
+    Swal.close();
     const result = await response.json();
-    if (result.status === 'error') {
-      //既存データがある場合などはここに入る
-      Swal.fire({
-        icon: "error",
-        title: "Oops...",
-        html: result.message,
-      });
-      console.log(`出勤簿データ登録失敗 既存データ有り？：[${new Date().toISOString()}]`);
-      return;
+
+    switch (result.status) {
+      case 'success':
+        // 登録成功
+        console.log(`出勤簿データ登録成功：[${getJSTISOString()}]`);
+        await Swal.fire({
+          icon: "success",
+          title: "Good job!",
+          text: "正常に登録されました。お疲れ様です！",
+          showConfirmButton: false,
+          timer: 2000
+        });
+        break;
+      case 'error':
+        // 既存データがある場合などはここに入る
+        console.log(`出勤簿データ登録失敗 既存データ有り？：[${getJSTISOString()}]`);
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          html: result.message,
+        });
+        return;
     }
 
-    console.log(`出勤簿データ登録終了 [${new Date().toISOString()}]`);
-    await Swal.fire({
-      title: "Good job!",
-      text: "正常に登録されました。お疲れ様です！",
-      icon: "success",
-      showConfirmButton: false,
-      timer: 2000
-    });
     $('html, body').animate({ scrollTop: 0 }, 'normal');
   } catch (error) {
-    console.error(`出勤簿データ登録失敗 [${new Date().toISOString()}]：`, error);
+    console.error(`出勤簿データ登録失敗：[${getJSTISOString()}]：`, error);
     Swal.fire({
       icon: "error",
       title: "Oops...",
@@ -226,7 +239,7 @@ async function execDelete() {
       $('#overlay').show();
 
       try {
-        console.log('削除処理開始:', new Date().toISOString());
+        console.log(`削除処理開始：[${getJSTISOString()}]`);
         //削除データ作成
         const deleteData = {
           type: 'delete',
@@ -248,11 +261,11 @@ async function execDelete() {
             title: "Oops...",
             text: result.message,
           });
-          console.log(`出勤簿データ登録失敗 削除データ無し？：[${new Date().toISOString()}]`);
+          console.log(`出勤簿データ登録失敗 削除データ無し？：[${getJSTISOString()}]`);
           return
         }
 
-        console.log('削除処理完了:', new Date().toISOString());
+        console.log(`削除処理完了：[${getJSTISOString()}]`);
         await Swal.fire({
           title: "Deleted!",
           text: "正常に削除されました。",
@@ -261,7 +274,7 @@ async function execDelete() {
           timer: 2000
         });
       } catch (error) {
-        console.error(`削除処理失敗 [${new Date().toISOString()}]：`, error);
+        console.error(`削除処理失敗 [${getJSTISOString()}]：`, error);
         Swal.fire({
           icon: "error",
           title: "Oops...",
@@ -280,6 +293,13 @@ function calculateWorkHours(startTime, endTime) {
   const end = new Date(`1970-01-01T${endTime}`);
   const diffInMinutes = (end - start) / (1000 * 60); // ミリ秒を分に変換
   return Math.round((diffInMinutes / 60) * 100) / 100; // 時間に変換して小数点第2位まで
+}
+//日本時間取得
+function getJSTISOString() {
+  const now = new Date();
+  const jstOffset = 9 * 60 * 60 * 1000; // UTC+9時間をミリ秒で計算
+  const jstDate = new Date(now.getTime() + jstOffset);
+  return jstDate.toISOString().replace('T', ' ').slice(0, 23); // ミリ秒3桁まで
 }
 
 document.addEventListener('DOMContentLoaded', function () {

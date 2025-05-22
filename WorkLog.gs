@@ -22,36 +22,38 @@ function doPost(e) {
 }
 // データ登録処理
 function registData(ss, data) {
-  // トランザクション処理のため、エラーが発生した場合は両方の保存を行わない
+  // トランザクション処理のため、エラーが発生した場合は保存を行わない
   try {
     // 既存データの存在チェック
     const headerSheet = ss.getSheetByName(SHEET_NAMES.HEADER);
     const headerLastRow = headerSheet.getLastRow();
     if (headerLastRow > 1) {
       const headerValues = headerSheet.getRange(2, 1, headerLastRow - 1, 2).getValues();
-      for (let i = 0; i < headerValues.length; i++) {
-        const cellDate = formatDate(new Date(headerValues[i][0]));
-        const cellLocation = String(headerValues[i][1]);
-        if (cellDate === data.date && cellLocation === data.location) {
-          return createErrorResponse('既に登録済みのデータがあります。<br>一度削除してから再度登録してください。');
-        }
+      const isDuplicate = headerValues.some(([date, location]) =>
+        formatDate(new Date(date)) === data.date && String(location) === data.location
+      );
+      if (isDuplicate) {
+        return createErrorResponse('既に登録済みのデータがあります。<br>一度削除してから再度登録してください。');
       }
     }
+
     // ヘッダーデータの保存
-    const headerRow = [
-      data.date,       // 日付
-      data.location,   // 監視所
-      data.recorder,   // 記入者
-      data.supervisor, // 監視長
-      new Date()       // timestamp
-    ];
-    headerSheet.appendRow(headerRow);
+    // const headerRow = [
+    //   data.date,       // 日付
+    //   data.location,   // 監視所
+    //   data.recorder,   // 記入者
+    //   data.supervisor, // 監視長
+    //   new Date()       // timestamp
+    // ];
+    // headerSheet.appendRow(headerRow);
 
     // 明細データの保存
     const detailSheet = ss.getSheetByName(SHEET_NAMES.DETAIL);
     const details = data.details.map(detail => [
       data.date,         // 日付
       data.location,     // 監視所
+      data.recorder,     // 記入者
+      data.supervisor,   // 監視長
       detail.name,       // 名前
       detail.volunteer ? '1' : '0',  // ボランティア
       detail.shiftType,  // 勤務形態
@@ -91,30 +93,39 @@ function createErrorResponse(error) {
 
 // データ削除処理
 function deleteData(ss, data) {
-  var sheets = ss.getSheets();
+  var detailSheet = ss.getSheetByName(SHEET_NAMES.DETAIL);
   var targetDate = data.date;
   var targetLocation = data.location;
-  var targetData = false;
 
   try {
-    sheets.forEach(function (sheet) {
-      var lastRow = sheet.getLastRow();
-      if (lastRow < 1) return; // シートが空の場合はスキップ
+    if (!detailSheet) {
+      return createErrorResponse('明細シートが見つかりません。');
+    }
 
-      var values = sheet.getRange(1, 1, lastRow, 2).getValues();
-      for (var row = lastRow; row >= 1; row--) {
-        var cellDate = formatDate(new Date(values[row - 1][0]));
-        var cellLocation = String(values[row - 1][1]);
-
-        if (cellDate === targetDate && cellLocation === targetLocation) {
-          sheet.deleteRow(row);
-          targetData = true;
-        }
-      }
-    });
-    if (!targetData) {
+    var lastRow = detailSheet.getLastRow();
+    if (lastRow < 1) {
       return createErrorResponse('削除対象のデータがありません。');
     }
+
+    // 削除対象データの存在チェック
+    const values = detailSheet.getRange(2, 1, lastRow - 1, 2).getValues();
+    const isExisting = values.some(([date, location]) =>
+      formatDate(new Date(date)) === targetDate && String(location) === targetLocation
+    );
+    if (!isExisting) {
+      return createErrorResponse('削除対象のデータがありません。');
+    }
+
+
+    for (var row = lastRow; row >= 2; row--) {
+      var cellDate = formatDate(new Date(values[row - 2][0]));
+      var cellLocation = String(values[row - 2][1]);
+
+      if (cellDate === targetDate && cellLocation === targetLocation) {
+        detailSheet.deleteRow(row);
+      }
+    }
+
     return createSuccessResponse('データが正常に削除されました');
   } catch (error) {
     throw new Error('データの削除中にエラーが発生しました: ' + error.message);
@@ -173,7 +184,7 @@ function getDetailData(ss) {
   const detailLastRow = detailSheet.getLastRow();
   if (detailLastRow < 2) return [];
 
-  return detailSheet.getRange(2, 1, detailLastRow - 1, 9).getValues();
+  return detailSheet.getRange(2, 1, detailLastRow - 1, 12).getValues();
 }
 
 // ヘッダーデータの処理
@@ -203,12 +214,13 @@ function processDetailData(detailData, results) {
     const date = formatDate(new Date(row[0]));
     const locationId = row[1].toString();
     const detailInfo = {
-      name: row[2],
-      type: row[3],
-      startTime: formatTime(row[4]),
-      endTime: formatTime(row[5]),
-      batchTest: row[7],
-      remarks: row[8]
+      name: row[4],
+      volunteer: row[5],
+      type: row[6],
+      startTime: formatTime(row[7]),
+      endTime: formatTime(row[8]),
+      batchTest: row[10],
+      remarks: row[11]
     };
 
     const location = Object.values(LOCATIONS).find(loc => loc.id === locationId);
