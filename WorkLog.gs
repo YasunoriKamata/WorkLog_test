@@ -103,7 +103,7 @@ function deleteData(ss, data) {
     }
 
     var lastRow = detailSheet.getLastRow();
-    if (lastRow < 1) {
+    if (lastRow < 2) {
       return createErrorResponse('削除対象のデータがありません。');
     }
 

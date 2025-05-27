@@ -7,7 +7,7 @@ const ROW_TEMPLATE = `
             <label><input type="radio" name="shiftType{index}" class="shiftType" value="1" checked> 日勤</label>
             <label><input type="radio" name="shiftType{index}" class="shiftType" value="2"> 時間勤務</label>
         </td>
-        <td data-label="出勤時刻"><input type="time" name="startTime{index}" value="09:00" list="data-list" disabled></td>
+        <td data-label="出勤時刻"><input type="time" name="startTime{index}" value="08:00" list="data-list" disabled></td>
         <td data-label="退勤時刻"><input type="time" name="endTime{index}" value="17:00" list="data-list" disabled></td>
         <td data-label="バッチテスト"><input type="checkbox" name="batchTest"></td>
         <td data-label="備考"><input type="text" name="remarks" placeholder="備考"></td>
