@@ -1,7 +1,7 @@
 // 定数定義
 const ROW_TEMPLATE = `
     <tr>
-        <td data-label="名前"><input type="text" class="autocomplete-input" name="name" placeholder="名前"></td>
+        <td data-label="名前"><input type="text" class="autocomplete-input" name="name" placeholder="名前を選択"></td>
         <td data-label="ボランティア"><input type="checkbox" name="volunteer"></td>
         <td data-label="場所">
             <label><input type="radio" name="shiftType{index}" class="shiftType" value="1" checked> 日勤</label>
@@ -32,6 +32,9 @@ async function getMasterData() {
   //キャッシュを削除
   nameMasterCache = [];
   console.log(`マスタデータ取得開始：[${getJSTISOString()}]`);
+
+  // オーバーレイを表示
+  setLoading(true);
   try {
     const response = await fetch(NAMELIST_URL, {
       method: 'GET',
@@ -44,7 +47,11 @@ async function getMasterData() {
     console.log(`マスタデータ取得完了：[${getJSTISOString()}]`);
   } catch (error) {
     console.error(`マスタデータ取得失敗：[${getJSTISOString()}]：`, error);
+  } finally {
+    // オーバーレイを非表示
+    setLoading(false);
   }
+
   // オートコンプリートを再初期化
   initAutocomplete();
 }
@@ -77,8 +84,7 @@ function initRows() {
 // キャッシュ再読み込み処理
 async function reloadMaster() {
   try {
-    $('body').css('cursor', 'wait');
-    $('#overlay').show();
+    setLoading(true);
     // マスタデータを再取得
     await getMasterData();
 
@@ -96,8 +102,7 @@ async function reloadMaster() {
       text: "マスタデータの再読込に失敗しました",
     });
   } finally {
-    $('body').css('cursor', 'default');
-    $('#overlay').hide();
+    setLoading(false);
   }
 }
 
@@ -110,8 +115,7 @@ async function execRegist() {
       return false;
     }
 
-    $('body').css('cursor', 'wait');
-    $('#overlay').show();
+    setLoading(true);
     Swal.fire({
       title: '登録中です...',
       allowOutsideClick: false,
@@ -125,13 +129,6 @@ async function execRegist() {
     const details = [];
     $('#attendanceTableBody tr').each(function () {
       const name = $(this).find('input[name="name"]').val();
-      // 時間勤務の場合は勤務時間を計算
-      const workhours = $(this).find('input[name^="shiftType"]:checked').val() === '2'
-        ? calculateWorkHours(
-          $(this).find('input[name^="startTime"]').val(),
-          $(this).find('input[name^="endTime"]').val()
-        )
-        : '';
 
       if (name) {
         details.push({
@@ -144,7 +141,7 @@ async function execRegist() {
           endTime: $(this).find('input[name^="shiftType"]:checked').val() === '2'
             ? $(this).find('input[name^="endTime"]').val()
             : '',
-          workhours: workhours >= 6 ? workhours - 1 : workhours, // 6時間以上の場合は1時間減らす
+          workhours: "", // ここでは実働時間は設定しない
           batchTest: $(this).find('input[name="batchTest"]').prop('checked'),
           remarks: $(this).find('input[name="remarks"]').val()
         });
@@ -201,8 +198,7 @@ async function execRegist() {
       html: error.message,
     });
   } finally {
-    $('body').css('cursor', 'default');
-    $('#overlay').hide();
+    setLoading(false);
   }
 }
 
@@ -235,8 +231,7 @@ async function execDelete() {
     confirmButtonText: "削除実行"
   }).then(async (result) => {
     if (result.isConfirmed) {
-      $('body').css('cursor', 'wait');
-      $('#overlay').show();
+      setLoading(true);
 
       try {
         console.log(`削除処理開始：[${getJSTISOString()}]`);
@@ -281,8 +276,7 @@ async function execDelete() {
           text: "削除処理に失敗しました",
         });
       } finally {
-        $('body').css('cursor', 'default');
-        $('#overlay').hide();
+        setLoading(false);
       }
     }
   });
@@ -300,6 +294,16 @@ function getJSTISOString() {
   const jstOffset = 9 * 60 * 60 * 1000; // UTC+9時間をミリ秒で計算
   const jstDate = new Date(now.getTime() + jstOffset);
   return jstDate.toISOString().replace('T', ' ').slice(0, 23); // ミリ秒3桁まで
+}
+// ローディング表示を制御する関数
+function setLoading(isLoading) {
+  if (isLoading) {
+    $('body').css('cursor', 'wait');
+    $('#overlay').show();
+  } else {
+    $('#overlay').hide();
+    $('body').css('cursor', 'default');
+  }
 }
 
 document.addEventListener('DOMContentLoaded', function () {
