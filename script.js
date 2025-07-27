@@ -67,7 +67,18 @@ function initAutocomplete() {
       response(matches.map(item => item[0]));
     },
     minLength: 1,
-    delay: 0
+    delay: 0,
+    change: function (_event, ui) {
+      // フォーカスを外した時に候補に一致しない場合はクリア&警告
+      if (!ui.item || !availableCities.includes($(this).val())) {
+        $(this).val('');
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: "入力候補から選択してください",
+        });
+      }
+    }
   });
 }
 // 行の動的追加
